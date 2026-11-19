@@ -1,0 +1,10 @@
+Flask==2.2.3
+Flask-Bootstrap==3.3.7.1
+Flask-Migrate==4.0.4
+mysql-connector-python==8.0.32
+Flask-SQLAlchemy==3.0.3
+onnxruntime
+Pillow
+numpy==1.24.2
+SQLAlchemy==2.0.9
+easyocr==1.7.0

@@ -1,0 +1,12 @@
+.git
+.env
+**/__pycache__
+*.pyc
+venv/
+.venv/
+env/
+images/*
+!images/.gitkeep
+notebooks/
+tests/
+docs/

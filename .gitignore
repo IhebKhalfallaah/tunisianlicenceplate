@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+s_env/
+
+# Environment / secrets
+.env
+
+# Uploaded (anonymised) images saved at runtime
+images/*
+!images/.gitkeep
+
+# Datasets and training artefacts
+notebooks/**/*.zip
+notebooks/plates/
+*.pt
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store

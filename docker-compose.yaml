@@ -1,0 +1,17 @@
+services:
+  db:
+    build: ./database
+    image: license_plate_db
+    ports:
+      - "3306:3306"
+
+  app:
+    build: .
+    image: license_plate
+    ports:
+      - "5000:5000"
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      - db

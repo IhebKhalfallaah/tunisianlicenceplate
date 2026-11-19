@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>License Plate Recognition</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="" name="keywords">
+    <meta content="" name="description">
+
+    <!-- Favicon -->
+    <link href="{{ url_for('static',filename='img/favicon.ico') }}" rel="icon">
+
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Ubuntu:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Icon Font Stylesheet -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="{{ url_for('static',filename='lib/animate/animate.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='lib/owlcarousel/assets/owl.carousel.min.css') }}" rel="stylesheet">
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="{{ url_for('static',filename='css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <!-- Template Stylesheet -->
+    <link href="{{ url_for('static',filename='css/style.css') }}" rel="stylesheet">
+    <script >
+    var images=[null,null,null,null,null];
+
+    function add_image(index){
+        const fileInput = document.getElementById('file-input' + index);
+        const file = fileInput.files[0]; // get the selected file
+        if(file){
+            images[index]=file;
+        }
+    }
+    function send_to_server(){
+        console.log(images);
+        if(images.length!=0){
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            var index=0;
+            for(i=0;i<5;i++){
+                if(images[i]){
+                    formData.append('image' + index, images[i]);
+                    index+=1;
+                }
+            }
+            xhr.open('POST', '/read');
+            xhr.onload=()=>{
+                console.log(xhr.response);
+                var resp=JSON.parse(xhr.response);
+                var text="";
+                if(resp['license_plate']){// success
+                    text=resp['license_plate'];
+                }else{// failure
+                    text=resp['error'];
+                }
+                text_field=document.getElementById('license_plate_number');
+                text_field.innerText=text;
+                console.log(resp);
+            }
+            xhr.send(formData); // send the form data to the server
+        }else{
+            console.log("images is empty");
+        }
+    }
+
+
+
+    function submit(){
+        const fileInput = document.getElementById('file-input');
+        const file = fileInput.files[0]; // get the selected file
+        const image_place=document.getElementById('image_place');
+
+        if(file){
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append('image', file);
+            xhr.open('POST', '/detect'); // change this to the URL of your server endpoint
+
+
+            xhr.onload=()=>{
+                var resp=JSON.parse(xhr.response);
+                bboxes=resp['bboxes'];
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                
+                reader.onload=function(event){
+                    
+                    // Set the canvas dimensions to match the image
+                    const img=new Image();
+                    img.src = event.target.result;
+                    img.onload=function(event){
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        
+                        // Draw the image on the canvas
+                        ctx.drawImage(img, 0, 0);
+                        
+                        // Draw a red rectangle on top of the image
+                        bboxes.forEach(bbox => {
+                            ctx.strokeStyle = 'red';
+                            ctx.lineWidth = 2;
+                            ctx.strokeRect(bbox[0],bbox[1],bbox[2],bbox[3]); 
+                        });
+                        
+                        // Get the resulting image as a data URL
+                        const resultDataUrl = canvas.toDataURL();
+                        
+                        // Display the resulting image in the <img> component
+                        image_place.src = resultDataUrl;
+
+                    }
+                }
+            }
+            xhr.send(formData); // send the form data to the server
+        }else{
+            //handle file null
+            console.log("send event");
+        }
+
+    }</script>
+</head>
+
+<body>
+    <!-- Spinner Start -->
+    <div id="spinner"
+        class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+        <div class="spinner-grow text-dark" style="width: 3rem; height: 3rem;" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+    <!-- Spinner End -->
+
+
+    <!-- Navbar Start -->
+    <div class="container-fluid bg-dark sticky-top">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg navbar-dark p-0">
+                <a href="/" class="navbar-brand">
+                    <h1 class="text-white" style="display: inline;">Comp</h1> <h1 class="text-danger" style="display: inline;">.Ai</h1>
+                </a>
+                <button type="button" class="navbar-toggler ms-auto me-0" data-bs-toggle="collapse"
+                    data-bs-target="#navbarCollapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <div class="navbar-nav ms-auto">
+                        <a href="/" class="nav-item nav-link">Home</a>
+                        <a href="/about" class="nav-item nav-link">About</a>
+                        <a href="/demo" class="nav-item nav-link active">Demo</a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+    <!-- Navbar End -->
+
+
+    <!-- Hero Start -->
+    <div class="container-fluid pt-5 bg-light hero-header">
+        <div class="container pt-5">
+            <div class="row g-5 pt-5">
+                <div class="col-lg-6 align-self-center text-center text-lg-start mb-lg-5">
+                    <h1 class="display-4 text-dark mb-4 animated slideInRight">Try It.</h1>
+                </div>
+                <div class="col-lg-6 align-self-end text-center text-lg-end">
+                    <img class="img-fluid" src="{{ url_for('static',filename='img/car-png-39063.png') }}" alt="" style="max-height: 300px;">
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Hero End -->
+
+
+    <!-- Case Start -->
+    <div class="container-fluid text-dark bg-light py-5">
+        <div class="container py-5">
+            <div class="mx-auto text-center wow fadeIn" data-wow-delay="0.1s" style="max-width: 500px;">
+                <div class="btn btn-sm border rounded-pill text-dark px-3 mb-3">Case Study</div>
+                <h1 class="mb-4 text-dark">Explore Our Recent Product</h1>
+            </div>
+            <div class="column g-4" id="input-holder">
+                <!-- image input fields -->
+                <div class="col-lg-4 wow fadeIn">
+                    <span>image0 : </span><input id="file-input0" class="input file" type="file" onchange="{add_image(0)}">
+                </div>
+
+                <div class="col-lg-4 wow fadeIn">
+                    <span>image1 : </span><input id="file-input1" class="input file" type="file" onchange="{add_image(1)}">
+                </div>
+
+                <div class="col-lg-4 wow fadeIn">
+                    <span>image2 : </span><input id="file-input2" class="input file" type="file" onchange="{add_image(2)}">
+                </div>
+
+                <div class="col-lg-4 wow fadeIn">
+                    <span>image3 : </span><input id="file-input3" class="input file" type="file" onchange="{add_image(3)}">
+                </div>
+
+                <div class="col-lg-4 wow fadeIn">
+                    <span>image4 : </span><input id="file-input4" class="input file" type="file" onchange="{add_image(4)}">
+                </div>
+            </div>
+            <!-- submit button -->
+            <div class="col-lg-4 wow fadeIn">
+                <button class="btn btn-dark" onclick="{send_to_server()}">submit</button>
+                <h1 id="license_plate_number"></h1>
+            </div>
+        </div>
+    </div>
+    <!-- Case End -->
+
+    <!-- Footer Start -->
+    <div class="container-fluid bg-dark text-dark-50 footer pt-5">
+        <div class="container wow fadeIn" data-wow-delay="0.1s">
+            <div class="copyright">
+                <div class="row">
+                    <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                        &copy; <a class="border-bottom" href="#">License Plate Recognition</a>, All Right Reserved.
+
+                        <!--/*** This template is free as long as you keep the footer author’s credit link/attribution link/backlink. If you'd like to use the template without the footer author’s credit link/attribution link/backlink, you can purchase the Credit Removal License from "https://htmlcodex.com/credit-removal". Thank you for your support. ***/-->
+                        Designed By <a class="border-bottom" href="https://htmlcodex.com">HTML Codex</a>
+                    </div>
+                    <div class="col-md-6 text-center text-md-end">
+                        <div class="footer-menu">
+                            <a href="/">Home</a>
+                            <a href="/about">About</a>
+                            <a href="/demo">Demo</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Footer End -->
+
+
+    <!-- Back to Top -->
+    <a href="#" class="btn btn-lg btn-dark btn-lg-square back-to-top pt-2"><i class="bi bi-arrow-up"></i></a>
+
+
+    <!-- JavaScript Libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static',filename='lib/wow/wow.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='lib/easing/easing.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='lib/waypoints/waypoints.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='lib/counterup/counterup.min.js')}}"></script>
+    <script src="{{ url_for('static',filename='lib/owlcarousel/owl.carousel.min.js') }}"></script>
+
+    <!-- Template Javascript -->
+    <script src="{{ url_for('static',filename='js/main.js') }}"></script>
+</body>
+
+</html>
